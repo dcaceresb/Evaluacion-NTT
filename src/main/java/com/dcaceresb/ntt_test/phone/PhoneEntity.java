@@ -3,12 +3,14 @@ package com.dcaceresb.ntt_test.phone;
 import com.dcaceresb.ntt_test.user.UserEntity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.*;
 
 @Entity
-@Data
-@EqualsAndHashCode
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+@Getter
+@Setter
 @Table(name="phones")
 public class PhoneEntity {
     @Id

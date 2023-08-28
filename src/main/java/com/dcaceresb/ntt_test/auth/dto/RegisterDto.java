@@ -4,9 +4,13 @@ import com.dcaceresb.ntt_test.phone.dto.CreatePhoneDto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import lombok.Builder;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
+@Builder
 public class RegisterDto {
     @Email(message = "Must be a valid email")
     @NotNull(message = "Email must provided")
@@ -17,5 +21,5 @@ public class RegisterDto {
     @NotNull(message = "Password must provided")
     private String password;
 
-    private CreatePhoneDto[] phones;
+    private List<CreatePhoneDto> phones;
 }

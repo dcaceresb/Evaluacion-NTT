@@ -22,8 +22,6 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
-    private final UserMapper userMapper;
-    private final PhoneMapper phoneMapper;
     private final PasswordEncoder encoder;
 
     public UserDto update(String token, UpdateUserDto data){
@@ -40,9 +38,12 @@ public class UserService {
         if(password != null){
             user.setPassword(encoder.encode(password));
         }
-        if(!phones.isEmpty()){
-            List<PhoneEntity> phonesMapped = phones.stream().map(this.phoneMapper::toEntity).toList();
+        if(phones != null && !phones.isEmpty()){
+            List<PhoneEntity> phonesMapped = phones.stream().map(PhoneMapper.INSTANCE::toEntity).toList();
             List<PhoneEntity> phoneSaved = user.getPhones();
+            if(phoneSaved==null){
+                phoneSaved = new ArrayList<>();
+            }
             for(PhoneEntity ent : phonesMapped){
                 ent.setUser(user);
                 phoneSaved.remove(ent);
@@ -52,12 +53,12 @@ public class UserService {
         }
 
         this.userRepository.save(user);
-        return this.userMapper.toDto(user);
+        return UserMapper.INSTANCE.toDto(user);
 
     }
 
     public UserEntity findAuthenticated(String token){
-        if(token==null){
+        if(token == null || !token.contains("Bearer ")){
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User must be logged in");
         }
         token = token.split(" ")[1];

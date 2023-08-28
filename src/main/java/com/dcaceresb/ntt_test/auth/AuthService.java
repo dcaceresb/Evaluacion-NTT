@@ -15,6 +15,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -22,30 +23,33 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AuthService {
     private final UserRepository userRepository;
-    private final UserMapper userMapper;
     private final PasswordEncoder encoder;
 
     public UserDto register(RegisterDto data){
         if(userRepository.existByEmail(data.getEmail())){
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email en uso");
         }
-        UserEntity user = userMapper.registerToEntity(data);
+        UserEntity user = UserMapper.INSTANCE.registerToEntity(data);
         String encoded = encoder.encode(data.getPassword());
         String token = UUID.randomUUID().toString();
 
         user.setPassword(encoded);
         user.setToken(token);
         user.setLastLogin(Instant.now());
-        for(PhoneEntity phone : user.getPhones()){
-            phone.setUser(user);
+        List<PhoneEntity> phones =  user.getPhones();
+        if(phones != null){
+            for(PhoneEntity phone : phones){
+                phone.setUser(user);
+            }
         }
+
         userRepository.save(user);
-        return userMapper.toDto(user);
+        return UserMapper.INSTANCE.toDto(user);
     }
 
     public UserDto login(LoginDto data){
         Optional<UserEntity> user = userRepository.findByEmail(data.getEmail());
-        if(!user.isPresent()){
+        if(user.isEmpty()){
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Credenciales invalidas");
         }
         UserEntity entity = user.get();
@@ -60,6 +64,6 @@ public class AuthService {
         entity.setLastLogin(Instant.now());
         entity.setUpdatedAt(Instant.now());
         userRepository.save(entity);
-        return userMapper.toDto(entity);
+        return UserMapper.INSTANCE.toDto(entity);
     }
 }

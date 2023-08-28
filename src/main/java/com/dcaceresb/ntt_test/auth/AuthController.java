@@ -5,10 +5,8 @@ import com.dcaceresb.ntt_test.auth.dto.RegisterDto;
 import com.dcaceresb.ntt_test.user.dto.UserDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
@@ -17,6 +15,7 @@ public class AuthController {
 
     private final AuthService service;
 
+    @ResponseStatus(HttpStatus.OK)
     @PostMapping("/login")
     public UserDto login(
             @Valid @RequestBody LoginDto data
@@ -24,6 +23,7 @@ public class AuthController {
         return this.service.login(data);
     }
 
+    @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/register")
     public UserDto register(
             @Valid @RequestBody RegisterDto data

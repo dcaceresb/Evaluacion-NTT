@@ -1,7 +1,7 @@
 package com.dcaceresb.ntt_test.user;
 import com.dcaceresb.ntt_test.phone.PhoneEntity;
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -9,7 +9,11 @@ import java.time.Instant;
 import java.util.List;
 
 @Entity
-@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+@Getter
+@Setter
 @Table(name="users")
 public class UserEntity {
     @Id
