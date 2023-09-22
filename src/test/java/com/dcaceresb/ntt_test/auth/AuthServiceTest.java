@@ -2,10 +2,10 @@ package com.dcaceresb.ntt_test.auth;
 
 import com.dcaceresb.ntt_test.auth.dto.LoginDto;
 import com.dcaceresb.ntt_test.auth.dto.RegisterDto;
+import com.dcaceresb.ntt_test.common.jwt.JwtService;
 import com.dcaceresb.ntt_test.phone.dto.CreatePhoneDto;
-import com.dcaceresb.ntt_test.phone.dto.PhoneDto;
 import com.dcaceresb.ntt_test.user.UserEntity;
-import com.dcaceresb.ntt_test.user.UserRepository;
+import com.dcaceresb.ntt_test.user.UserService;
 import com.dcaceresb.ntt_test.user.dto.UserDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,11 +13,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.Optional;
 
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -25,9 +26,11 @@ import static org.junit.jupiter.api.Assertions.*;
 @ExtendWith(MockitoExtension.class)
 public class AuthServiceTest {
     @Mock
-    private UserRepository userRepository;
+    private UserService userService;
     @Mock
-    private  PasswordEncoder encoder;
+    private JwtService jwtService;
+    @Mock
+    private PasswordEncoder encoder;
     @InjectMocks
     private AuthService service;
 
@@ -51,6 +54,10 @@ public class AuthServiceTest {
                 .password("Password01")
                 .phones(List.of(phone))
                 .build();
+        ReflectionTestUtils.setField(jwtService, "secret", "5hUJxB9tjvibPsgtYTd9ypq5zYHKaAaD");
+        ReflectionTestUtils.setField(jwtService, "duration", 600000);
+        ReflectionTestUtils.setField(service, "regexEmail", "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$");
+        ReflectionTestUtils.setField(service, "regexPassword", "[A-Z)][a-z]*[0-9]{2}");
     }
     @Test
     public void loginSuccess(){
@@ -58,8 +65,8 @@ public class AuthServiceTest {
                 .id("user_id")
                 .password("hashed_pass")
                 .build();
-        when(userRepository.findByEmail(email))
-                .thenReturn(Optional.of(entity));
+        when(userService.findByEmail(email))
+                .thenReturn(entity);
         when(encoder.matches(loginDto.getPassword(), entity.getPassword()))
                 .thenReturn(true);
 
@@ -79,8 +86,8 @@ public class AuthServiceTest {
         UserEntity entity = UserEntity.builder()
                 .id("user_id")
                 .build();
-        when(userRepository.findByEmail(email))
-                .thenReturn(Optional.of(entity));
+        when(userService.findByEmail(email))
+                .thenReturn(entity);
 
         assertThrows(
                 ResponseStatusException.class,
@@ -89,24 +96,37 @@ public class AuthServiceTest {
     }
     @Test
     public void registerSuccess(){
+        when(userService.create(any()))
+                .thenReturn(this.buildUserEntity());
         UserDto user = this.service.register(registerDto);
         assertNotNull(user);
     }
     @Test
     public void registerSuccessNoPhones(){
+        when(userService.create(any()))
+                .thenReturn(this.buildUserEntity());
         registerDto.setPhones(null);
         UserDto user = this.service.register(registerDto);
         assertNotNull(user);
     }
     @Test
     public void registerEmailInUse(){
-        when(userRepository.existByEmail(registerDto.getEmail()))
-                .thenReturn(true);
+        when(userService.create(any()))
+                .thenThrow(
+                        new ResponseStatusException(HttpStatus.CONFLICT)
+                );
 
         assertThrows(
                 ResponseStatusException.class,
                 () -> this.service.register(registerDto)
         );
+    }
+
+    private UserEntity buildUserEntity(){
+        return UserEntity.builder()
+                .id("some_id")
+                .password("pass")
+                .build();
     }
 
 }

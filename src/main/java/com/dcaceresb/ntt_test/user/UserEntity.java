@@ -6,6 +6,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
+import java.util.Date;
 import java.util.List;
 
 @Entity
@@ -19,24 +20,25 @@ public class UserEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
-    @Column(unique = true)
+    @Column(unique = true, name = "UQ_email")
     private String email;
     @Column()
     private String password;
+    @Builder.Default()
     @Column()
     private Boolean isActive = true;
-    @Column()
+    @Column(length = 1024)
     private String token;
     @Column(name = "last_login")
-    private Instant lastLogin;
+    private Date lastLogin;
 
     @CreationTimestamp()
     @Column(name = "created")
-    private Instant createdAt;
+    private Date createdAt;
 
     @UpdateTimestamp()
     @Column(name = "modified")
-    private Instant updatedAt;
+    private Date updatedAt;
 
     @OneToMany(mappedBy = "user" ,cascade = CascadeType.ALL)
     private List<PhoneEntity> phones;

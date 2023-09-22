@@ -26,8 +26,9 @@ public class AuthController {
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/register")
     public UserDto register(
-            @Valid @RequestBody RegisterDto data
+            @RequestBody RegisterDto data
     ){
+        System.out.println("quie paza");
         return this.service.register(data);
     }
 }

@@ -65,8 +65,8 @@ public class UserControllerTest {
 
     MockHttpServletRequestBuilder getRequest(){
         return  get("/user")
-                .header("Authorization", "Bearer token")
                 .accept(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer token")
                 .with(csrf());
     }
 
@@ -88,6 +88,7 @@ public class UserControllerTest {
                 .accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(obj.writeValueAsString(data))
+                .header("Authorization", "Bearer token")
                 .with(csrf());
     }
 

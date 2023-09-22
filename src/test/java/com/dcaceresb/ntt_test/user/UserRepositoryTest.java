@@ -43,7 +43,6 @@ public class UserRepositoryTest {
                 .isActive(false)
                 .build();
         entityManager.persist(testUser);
-
         entityManager.persist(userDeactivated);
         entityManager.flush();
     }

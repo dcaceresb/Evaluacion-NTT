@@ -17,12 +17,10 @@ import java.io.Serializable;
 @Builder
 public class LoginDto implements Serializable {
     @JsonProperty("email")
-    @Email(message = "Must be a valid email")
     @NotNull(message = "Email must provided")
     private String email;
 
     @JsonProperty("password")
     @NotNull(message = "Password must provided")
-    @Pattern(regexp = "[A-Z][a-z]*[0-9]{2}", message = "The password must have one uppercase, many lowercase and exact 2 digits")
     private String password;
 }
