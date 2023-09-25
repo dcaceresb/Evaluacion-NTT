@@ -2,7 +2,6 @@ package com.dcaceresb.ntt_test.common.jwt;
 
 import com.dcaceresb.ntt_test.user.UserEntity;
 import com.dcaceresb.ntt_test.user.UserRepository;
-import com.dcaceresb.ntt_test.user.UserService;
 import io.jsonwebtoken.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,18 +24,12 @@ public class JwtService {
     @Value("${jwt.duration}")
     private int duration;
     public String generate(UserEntity user){
-
-        System.out.println(secret);
-        System.out.println(duration);
-
         long current = System.currentTimeMillis();
         Date issued = new Date(current);
         Date expired = new Date(current+duration);
         Map<String, Object> claims = new HashMap<>();
-        System.out.println(user.getId());
-        claims.put("id", user.getId());
-        claims.put("user", user);
 
+        claims.put("id", user.getId());
         String token = Jwts.builder()
                 .setClaims(claims)
                 .setIssuedAt(issued)

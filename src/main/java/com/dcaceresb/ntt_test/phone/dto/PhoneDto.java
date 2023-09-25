@@ -1,11 +1,9 @@
 package com.dcaceresb.ntt_test.phone.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
-
 
 @Data
 @Builder

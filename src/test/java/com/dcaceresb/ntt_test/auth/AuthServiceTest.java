@@ -70,7 +70,7 @@ public class AuthServiceTest {
         when(encoder.matches(loginDto.getPassword(), entity.getPassword()))
                 .thenReturn(true);
 
-        UserDto user = this.service.login(loginDto);
+        UserEntity user = this.service.login(loginDto);
         assertNotNull(user);
         assertEquals(entity.getId(), user.getId());
     }

@@ -7,17 +7,14 @@ import com.dcaceresb.ntt_test.user.dto.CreateUserDto;
 import com.dcaceresb.ntt_test.user.dto.UpdateUserDto;
 import com.dcaceresb.ntt_test.user.dto.UserDto;
 import com.dcaceresb.ntt_test.user.dto.UserMapper;
-import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,7 +30,7 @@ public class UserService {
 
     public UserEntity findByEmail(String email){
         Optional<UserEntity> opt = this.userRepository.findByEmail(email);
-        return opt.get();
+        return opt.orElse(null);
     }
     public UserEntity create(CreateUserDto data){
         UserEntity user = UserMapper.INSTANCE.createToEntity(data);
@@ -46,11 +43,8 @@ public class UserService {
 
         try{
             return this.userRepository.save(user);
-        }catch (ConstraintViolationException e){
-            if(e.getConstraintViolations().contains("UQ_email")){
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "Email en uso");
-            }
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error creating the user");
+        }catch (DataIntegrityViolationException e){
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email duplicado");
         }
     }
 
