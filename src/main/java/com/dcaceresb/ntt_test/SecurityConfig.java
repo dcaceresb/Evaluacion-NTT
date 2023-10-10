@@ -4,6 +4,7 @@ import com.dcaceresb.ntt_test.common.jwt.JwtFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -27,12 +28,12 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        AntPathRequestMatcher pathAuth = new AntPathRequestMatcher("/auth/**");
+        AntPathRequestMatcher createUserPath = new AntPathRequestMatcher("/user", HttpMethod.POST.name());
 
         http.authorizeHttpRequests(
                 authorizeRequests -> authorizeRequests
-                        .requestMatchers(pathAuth).permitAll()
-                        .anyRequest().permitAll()
+                        .requestMatchers(createUserPath).permitAll()
+                        .anyRequest().authenticated()
         ).csrf(AbstractHttpConfigurer::disable)
                 .cors(AbstractHttpConfigurer::disable);
 

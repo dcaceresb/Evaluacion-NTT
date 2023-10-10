@@ -1,0 +1,294 @@
+openapi: 3.0.3
+info:
+  title: Swagger Evaluacion BCI
+  description: "This is the API documentation that describes the list of endpoints to create, find, update and delete users"
+  contact:
+    name: David Cáceres
+    email: dcacereb@emeal.nttdata.com
+
+  version: 1.0.0
+
+servers:
+  - url: http://127.0.0.1:8080
+tags:
+  - name: User
+    description: Create and maintain users
+
+paths:
+  /user:
+    post:
+      tags:
+        - User
+      summary: Create a new user in the system
+      description: Add a new user to use the api
+      operationId: createUser
+      requestBody:
+        description: Create a new pet in the store
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserDto'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    get:
+      tags:
+        - User
+      summary: Find all users
+      description: Find all users stored
+      operationId: findAllUsers
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+  /user/{userId}:
+    get:
+      tags:
+        - User
+      summary: Find user by ID
+      description: Returns a single user if exists
+      operationId: findUserById
+      parameters:
+        - name: userId
+          in: path
+          description: ID of user to return
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - bearerAuth: []
+    patch:
+      tags:
+        - User
+      summary: Updates an user in the store with form data
+      description: ''
+      operationId: patchUserById
+      parameters:
+        - name: userId
+          in: path
+          description: ID of pet that needs to be updated
+          required: true
+          schema:
+            type: integer
+            format: uuid
+      requestBody:
+        description: Updates the user with the new data
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserDto'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+      security:
+        - bearerAuth: []
+    delete:
+      tags:
+        - User
+      summary: Deletes an user
+      description: delete an user
+      operationId: deleteUserById
+      parameters:
+        - name: userId
+          in: path
+          description: Pet id to delete
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: "#/components/responses/BadRequest"
+        '404':
+          $ref: "#/components/responses/NotFound"
+        '500':
+          $ref: "#/components/responses/InternalError"
+      security:
+        - bearerAuth: []
+
+components:
+  schemas:
+    CreatePhoneDto:
+      type: object
+      properties:
+        numero:
+          type: string
+          example: "1234567"
+          pattern: "[0-9]*"
+        codigoCiudad:
+          type: string
+          example: "1"
+          pattern: "[0-9]*"
+        codigoPais:
+          type: string
+          example: "57"
+          pattern: "[0-9]*"
+    CreateUserDto:
+      type: object
+      properties:
+        nombre:
+          type: string
+          example: John
+        correo:
+          type: string
+          example: john@email.com
+          format: email
+        contraseña:
+          type: string
+          example: '12345'
+        telefonos:
+          type: array
+          items:
+            $ref: '#/components/schemas/CreatePhoneDto'
+    UpdateUserDto:
+      type: object
+      properties:
+        nombre:
+          type: string
+          example: John
+        correo:
+          type: string
+          example: john@email.com
+          format: email
+        contraseña:
+          type: string
+          example: '12345'
+        telefonos:
+          type: array
+          items:
+            $ref: '#/components/schemas/CreatePhoneDto'
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: "ID of the user"
+          example: "82f5c8e2-6711-11ee-8c99-0242ac120002"
+        creado:
+          type: string
+          description: "Date of the creation"
+          example: "2023-09-01-12-00-00"
+          format: date
+        modificado:
+          type: string
+          description: "Date of the last user's update"
+          example: "2023-09-02-12-00-00"
+          format: date
+        ultimoLogin:
+          type: string
+          description: "Date of the last user's login"
+          example: "2023-09-02-12-00-00"
+          format: date
+        token:
+          type: string
+          description: "Active user's JWT token"
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+        activo:
+          type: boolean
+          description: Indicates if the user is enabled or not
+          example: true
+    ApiResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        type:
+          type: string
+        message:
+          type: string
+    Error:
+      type: object
+      properties:
+        mensaje:
+          type: string
+          example: "Ha ocurrido un error"
+        status:
+          type: integer
+          example: 500
+        error:
+          type: string
+          example: "HTTP_ERROR"
+  responses:
+    NotFound:
+      description: The specified resource was not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    BadRequest:
+      description: Some input field isn't correct
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Conflict:
+      description: Conflict, cannot execute because some bussiness violation
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    InternalError:
+      description: Some internal error, NullPointer or ExecutionError
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  securitySchemes:
+    bearerAuth:
+      type: apiKey
+      name: Authorization
+      in: header
+      description: >-
+        Enter the token with the `Bearer: ` prefix, e.g. "Bearer {jwt_token}".

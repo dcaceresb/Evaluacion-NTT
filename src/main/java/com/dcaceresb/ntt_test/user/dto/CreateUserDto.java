@@ -1,6 +1,6 @@
 package com.dcaceresb.ntt_test.user.dto;
 
-import com.dcaceresb.ntt_test.phone.dto.CreatePhoneDto;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Data;
 
@@ -10,9 +10,15 @@ import java.util.List;
 @Data
 @Builder
 public class CreateUserDto {
+    @JsonProperty("nombre")
+    private String name;
+
+    @JsonProperty("correo")
     private String email;
-    private String token;
+
+    @JsonProperty("contraseña")
     private String password;
-    private Date lastLogin;
-    private List<CreatePhoneDto> phones;
+
+    @JsonProperty("telefonos")
+    private List<PhoneDto> phones;
 }

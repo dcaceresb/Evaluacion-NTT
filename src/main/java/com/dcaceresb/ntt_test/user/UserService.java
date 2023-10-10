@@ -1,12 +1,8 @@
 package com.dcaceresb.ntt_test.user;
 
-import com.dcaceresb.ntt_test.phone.PhoneEntity;
-import com.dcaceresb.ntt_test.phone.dto.PhoneDto;
-import com.dcaceresb.ntt_test.phone.dto.PhoneMapper;
-import com.dcaceresb.ntt_test.user.dto.CreateUserDto;
-import com.dcaceresb.ntt_test.user.dto.UpdateUserDto;
-import com.dcaceresb.ntt_test.user.dto.UserDto;
-import com.dcaceresb.ntt_test.user.dto.UserMapper;
+import com.dcaceresb.ntt_test.common.dto.ApiResponseDto;
+import com.dcaceresb.ntt_test.common.jwt.JwtService;
+import com.dcaceresb.ntt_test.user.dto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -14,7 +10,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,6 +19,7 @@ import java.util.Optional;
 public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder encoder;
+    private final JwtService jwtService;
 
     public void save(UserEntity user){
         this.userRepository.save(user);
@@ -32,24 +29,51 @@ public class UserService {
         Optional<UserEntity> opt = this.userRepository.findByEmail(email);
         return opt.orElse(null);
     }
-    public UserEntity create(CreateUserDto data){
-        UserEntity user = UserMapper.INSTANCE.createToEntity(data);
-        List<PhoneEntity> phones = user.getPhones();
-        if(phones != null){
-            for(PhoneEntity phone : phones){
-                phone.setUser(user);
-            }
-        }
-
+    public UserDto create(CreateUserDto data){
+        UserEntity user = UserMapper.INSTANCE.INSTANCE.createToEntity(data);
+        String encoded = this.encoder.encode(data.getPassword());
+        user.setPassword(encoded);
         try{
-            return this.userRepository.save(user);
+            UserEntity created = this.userRepository.save(user);
+            String token = jwtService.generate(user);
+            created.setToken(token);
+            created.setLastLogin(new Date());
+            this.userRepository.save(created);
+            return UserMapper.INSTANCE.toDto(created);
         }catch (DataIntegrityViolationException e){
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email duplicado");
         }
     }
 
-    public UserDto update(String token, UpdateUserDto data){
-        UserEntity user = this.findAuthenticated(token);
+    public List<UserDto> findAll(){
+        List<UserEntity> users = this.userRepository.findAll();
+        return users.stream().map(UserMapper.INSTANCE::toDto).toList();
+    }
+
+    public UserDto findById(String id){
+        Optional<UserEntity> user = this.userRepository.findById(id);
+        return UserMapper.INSTANCE.toDto(
+                user.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"))
+        );
+    }
+
+    public ApiResponseDto delete(String id){
+        Optional<UserEntity> userOpt = this.userRepository.findById(id);
+        UserEntity user = userOpt.orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")
+        );
+        userRepository.delete(user);
+        return ApiResponseDto.builder()
+                .message("User "+id+" deleted successfully")
+                .status(200)
+                .build();
+    }
+
+
+    public UserDto update(String id, UpdateUserDto data){
+        UserEntity user = this.userRepository.findById(id).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")
+        );
         String email = data.getEmail();
         String password = data.getPassword();
         List<PhoneDto> phones = data.getPhones();
@@ -63,19 +87,10 @@ public class UserService {
             user.setPassword(encoder.encode(password));
         }
         if(phones != null && !phones.isEmpty()){
-            List<PhoneEntity> phonesMapped = phones.stream().map(PhoneMapper.INSTANCE::toEntity).toList();
-            List<PhoneEntity> phoneSaved = user.getPhones();
-            if(phoneSaved==null){
-                phoneSaved = new ArrayList<>();
-            }
-            for(PhoneEntity ent : phonesMapped){
-                ent.setUser(user);
-                phoneSaved.remove(ent);
-                phoneSaved.add(ent);
-            }
-            user.setPhones(phoneSaved);
+            user.setPhones(phones);
         }
 
+        user.setUpdatedAt(new Date());
         this.userRepository.save(user);
         return UserMapper.INSTANCE.toDto(user);
 

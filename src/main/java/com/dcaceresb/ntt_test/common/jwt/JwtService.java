@@ -42,18 +42,18 @@ public class JwtService {
     }
 
     public Claims validate(String token){
-        Jwt<Header, Claims> decoded = Jwts.parser()
+        Claims decoded = Jwts.parser()
                 .setSigningKey(secret.getBytes())
-                .parseClaimsJwt(token);
-        System.out.println(decoded.getBody());
+                .parseClaimsJws(token)
+                .getBody();
         Optional<UserEntity> user = this.repository.findByToken(token);
         if(user.isEmpty()){
             throw new ExpiredJwtException(
-                    decoded.getHeader(),
-                    decoded.getBody(),
+                    null,
+                    decoded,
                     "Token is deprecated, use the latest or login again"
             );
         }
-        return decoded.getBody();
+        return decoded;
     }
 }

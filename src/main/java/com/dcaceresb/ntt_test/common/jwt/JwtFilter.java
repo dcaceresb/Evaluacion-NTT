@@ -36,6 +36,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
         // Get jwt token and validate
         final String token = header.split(" ")[1].trim();
+        System.out.println("token spliteado "+token);
         try{
             Claims claims = jwtService.validate(token);
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
@@ -49,6 +50,7 @@ public class JwtFilter extends OncePerRequestFilter {
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
         }catch (Exception e){
+            System.out.println(e);
             chain.doFilter(request, response);
             return;
         }

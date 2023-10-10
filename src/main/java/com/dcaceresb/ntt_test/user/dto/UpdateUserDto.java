@@ -1,6 +1,5 @@
 package com.dcaceresb.ntt_test.user.dto;
 
-import com.dcaceresb.ntt_test.phone.dto.PhoneDto;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;

@@ -1,7 +1,7 @@
 package com.dcaceresb.ntt_test.user;
 
 
-import com.dcaceresb.ntt_test.phone.dto.PhoneDto;
+import com.dcaceresb.ntt_test.user.dto.PhoneDto;
 import com.dcaceresb.ntt_test.user.dto.UpdateUserDto;
 import com.dcaceresb.ntt_test.user.dto.UserDto;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -83,7 +83,7 @@ public class UserControllerTest {
                 .build();
         ObjectMapper obj = new ObjectMapper();
 
-        return  patch("/user")
+        return  patch("/user/id")
                 .header("Authorization", "Bearer token")
                 .accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON)
