@@ -8,7 +8,7 @@ import com.dcaceresb.ntt_test.user.dto.CreateUserDto;
 import com.dcaceresb.ntt_test.user.dto.PhoneDto;
 import com.dcaceresb.ntt_test.user.dto.UpdateUserDto;
 import com.dcaceresb.ntt_test.user.dto.UserDto;
-import io.jsonwebtoken.Jwts;
+import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,7 +18,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +26,6 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.BDDMockito.*;
-import static org.springframework.test.web.client.ExpectedCount.twice;
 
 
 @ExtendWith(MockitoExtension.class)
@@ -42,7 +40,6 @@ public class UserServiceTest {
     @InjectMocks
     private UserService service;
 
-    private final String token = "Bearer tokencito";
     private final String id = "user_id";
     private UserEntity testUser;
 
@@ -59,42 +56,6 @@ public class UserServiceTest {
                 repository,
                 encoder,
                 jwtService
-        );
-    }
-
-    @Test
-    public void findByTokenSuccess() {
-        when(repository.findByToken("tokencito"))
-                .thenReturn(Optional.of(testUser));
-
-        UserEntity user = this.service.findAuthenticated(token);
-        assertNotNull(user);
-        assertEquals(testUser.getId(), user.getId());
-    }
-
-    @Test
-    public void findByTokenInvalid() {
-        when(repository.findByToken(anyString()))
-                .thenReturn(Optional.empty());
-        assertThrows(
-                ResponseStatusException.class,
-                () -> this.service.findAuthenticated("not_valid_token")
-        );
-        assertThrows(
-                ResponseStatusException.class,
-                () -> this.service.findAuthenticated("Bearer not_valid")
-        );
-    }
-
-    @Test
-    public void findByTokenNoAuth() {
-        assertThrows(
-                ResponseStatusException.class,
-                () -> this.service.findAuthenticated(null)
-        );
-        assertThrows(
-                ResponseStatusException.class,
-                () -> this.service.findAuthenticated("")
         );
     }
 
@@ -132,7 +93,7 @@ public class UserServiceTest {
                 .password("newPassword")
                 .build();
         assertThrows(
-                ResponseStatusException.class,
+                DataIntegrityViolationException.class,
                 () ->  this.service.update(id, data)
         );
     }
@@ -142,7 +103,7 @@ public class UserServiceTest {
         UpdateUserDto data = UpdateUserDto.builder()
                 .build();
         assertThrows(
-                ResponseStatusException.class,
+                EntityNotFoundException.class,
                 () ->  this.service.update(id, data)
         );
     }
@@ -212,7 +173,7 @@ public class UserServiceTest {
     @Test
     public void deleteNoUser(){
         assertThrows(
-                ResponseStatusException.class,
+                EntityNotFoundException.class,
                 () ->  this.service.delete(id)
         );
     }
@@ -225,13 +186,6 @@ public class UserServiceTest {
         UserDto userDto = this.service.findById(id);
         then(repository).should().findById(id);
         assertEquals(id, userDto.getId());
-    }
-    @Test
-    public void findIdNoUser(){
-        assertThrows(
-                ResponseStatusException.class,
-                () ->  this.service.findById(id)
-        );
     }
 
     // FIND ALL METHOD TESTS
@@ -278,7 +232,7 @@ public class UserServiceTest {
                 .thenThrow(DataIntegrityViolationException.class);
 
         assertThrows(
-                ResponseStatusException.class,
+                DataIntegrityViolationException.class,
                 () ->  this.service.create(data)
         );
     }

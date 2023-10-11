@@ -3,12 +3,11 @@ package com.dcaceresb.ntt_test.user;
 import com.dcaceresb.ntt_test.common.dto.ApiResponseDto;
 import com.dcaceresb.ntt_test.common.jwt.JwtService;
 import com.dcaceresb.ntt_test.user.dto.*;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Date;
 import java.util.List;
@@ -30,19 +29,16 @@ public class UserService {
         return opt.orElse(null);
     }
     public UserDto create(CreateUserDto data){
-        UserEntity user = UserMapper.INSTANCE.INSTANCE.createToEntity(data);
+        UserEntity user = UserMapper.INSTANCE.createToEntity(data);
         String encoded = this.encoder.encode(data.getPassword());
         user.setPassword(encoded);
-        try{
-            UserEntity created = this.userRepository.save(user);
-            String token = jwtService.generate(user);
-            created.setToken(token);
-            created.setLastLogin(new Date());
-            this.userRepository.save(created);
-            return UserMapper.INSTANCE.toDto(created);
-        }catch (DataIntegrityViolationException e){
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email duplicado");
-        }
+        UserEntity created = this.userRepository.save(user);
+        // now with the id set, generate the token
+        String token = jwtService.generate(user);
+        created.setToken(token);
+        created.setLastLogin(new Date());
+        this.userRepository.save(created);
+        return UserMapper.INSTANCE.toDto(created);
     }
 
     public List<UserDto> findAll(){
@@ -52,16 +48,12 @@ public class UserService {
 
     public UserDto findById(String id){
         Optional<UserEntity> user = this.userRepository.findById(id);
-        return UserMapper.INSTANCE.toDto(
-                user.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"))
-        );
+        return UserMapper.INSTANCE.toDto(user.orElse(null));
     }
 
     public ApiResponseDto delete(String id){
         Optional<UserEntity> userOpt = this.userRepository.findById(id);
-        UserEntity user = userOpt.orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")
-        );
+        UserEntity user = userOpt.orElseThrow(EntityNotFoundException::new);
         userRepository.delete(user);
         return ApiResponseDto.builder()
                 .message("User "+id+" deleted successfully")
@@ -72,14 +64,14 @@ public class UserService {
 
     public UserDto update(String id, UpdateUserDto data){
         UserEntity user = this.userRepository.findById(id).orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")
+                EntityNotFoundException::new
         );
         String email = data.getEmail();
         String password = data.getPassword();
         List<PhoneDto> phones = data.getPhones();
         if(email != null && !email.equals(user.getEmail())){
             if(this.userRepository.existByEmail(email)){
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "Email en uso");
+                throw new DataIntegrityViolationException("Email en uso");
             }
             user.setEmail(email);
         }
@@ -96,15 +88,4 @@ public class UserService {
 
     }
 
-    public UserEntity findAuthenticated(String token){
-        if(token == null || !token.contains("Bearer ")){
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User must be logged in");
-        }
-        token = token.split(" ")[1];
-        Optional<UserEntity> opt = this.userRepository.findByToken(token);
-        if(opt.isEmpty()){
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Token not valid, must login again");
-        }
-        return opt.get();
-    }
 }
